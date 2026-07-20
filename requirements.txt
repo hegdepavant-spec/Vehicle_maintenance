@@ -14,11 +14,11 @@ plotly>=5.14.0
 gradio>=4.0.0
 
 # AI APIs
-groq>=0.4.0
-openai>=1.0.0
+google-genai>=2.11.0
 
 # Utilities
 python-dotenv>=1.0.0
+pydantic>=1.10.0
 
 # Optional
 xgboost>=2.0.0

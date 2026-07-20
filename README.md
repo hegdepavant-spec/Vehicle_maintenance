@@ -18,10 +18,10 @@ pip install -r requirements.txt
 Edit the `.env` file:
 
 ```env
-GROQ_API_KEY=your_groq_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-Get a **free** Groq API key at: https://console.groq.com/
+Create a Gemini API key in Google AI Studio.
 
 > The platform works fully without an API key — only the AI chat assistant requires one.
 
@@ -140,9 +140,7 @@ Subsystems analyzed:
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `GROQ_API_KEY` | Groq API key (free at console.groq.com) | Optional |
-| `OPENAI_API_KEY` | OpenAI API key | Optional |
-| `GEMINI_API_KEY` | Google Gemini API key | Optional |
+| `GEMINI_API_KEY` | Google Gemini API key | Required for advisor chat |
 
 ---
 
@@ -174,3 +172,12 @@ Change `server_port=7860` in `app.py` to another port.
 ## 📄 License
 
 MIT License — Free to use and modify.
+## Conversational Vehicle Maintenance Agent
+
+The app is now chat-first: describe your vehicle and symptoms naturally. The agent retains details across the session, asks only for missing critical information, applies configurable defaults for non-critical inputs, then runs the existing trained maintenance model.
+
+Key modules: `agents/vehicle_agent.py`, `services/extractor.py`, `services/memory_manager.py`, `services/prediction_service.py`, `services/explanation_service.py`, `services/recommendation_service.py`, and `config/defaults.py`.
+
+`build_ui()` launches the conversational experience. The earlier dashboard remains available as `build_legacy_ui()` only for reference.
+
+---

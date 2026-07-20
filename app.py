@@ -8,6 +8,7 @@ import os
 import sys
 import json
 import time
+import html
 import warnings
 import numpy as np
 import pandas as pd
@@ -27,6 +28,8 @@ from explainability   import (get_shap_explainer, compute_shap_values_single,
 from diagnostic_engine import run_diagnostics
 from rul_engine        import compute_rul, compute_vhi
 from ai_agent          import run_chat, api_available
+from agents.vehicle_agent import handle_message
+from services.advisor_service import gemini_health_check
 from visualizations    import (plot_vhi_gauge, plot_rul_gauge, plot_component_risk,
                                plot_shap_waterfall, plot_feature_importance,
                                plot_confusion_matrix, plot_roc_curve, plot_metrics_bar)
@@ -453,7 +456,7 @@ body, .gradio-container {
   border: 1px solid #3B4F6C !important;
   border-radius: var(--radius-sm) !important;
   color: var(--text-main) !important;
-  font-size: 0.95em !important;
+  font-size: 1.28em !important;
 }
 .gradio-container input:focus,
 .gradio-container select:focus {
@@ -519,13 +522,16 @@ label { color: var(--text-sub) !important; font-size: 0.9em !important; font-wei
 
 /* â”€â”€ Chat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .chatbot-container {
-  background: var(--bg-card) !important;
-  border: 1px solid #334761 !important;
-  border-radius: var(--radius) !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
 }
-.chatbot-container * {
+.chatbot-container .message,
+.chatbot-container [data-testid="bot"],
+.chatbot-container [data-testid="user"] {
   font-family: "Segoe UI", Roboto, Arial, sans-serif !important;
-  font-size: 0.98em !important;
+  font-size: 18px !important;
+  line-height: 1.65 !important;
 }
 .message.user-message {
   background: rgba(56,189,248,0.16) !important;
@@ -537,6 +543,25 @@ label { color: var(--text-sub) !important; font-size: 0.9em !important; font-wei
   border-radius: var(--radius-sm) !important;
   color: #F8FAFC !important;
 }
+
+/* Focused service-advisor workspace */
+.advisor-shell { max-width: 1180px; margin: 0 auto; padding: 28px 18px 42px; }
+.advisor-hero { padding: 20px 4px 24px; }
+.advisor-kicker { color:#38BDF8; font-size:13px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+.advisor-hero h1 { font-size:34px; line-height:1.15; margin:7px 0 10px; color:#F8FAFC; }
+.advisor-hero p { max-width:650px; margin:0; font-size:18px; color:#A8B3C7; line-height:1.55; }
+.advisor-chat-panel { background:#0F1B2D; border:1px solid #2C3D55; border-radius:16px; overflow:hidden; box-shadow:0 18px 42px rgba(0,0,0,.22); }
+.advisor-chat-head { display:flex; align-items:center; gap:10px; padding:16px 20px; border-bottom:1px solid #2C3D55; color:#E2E8F0; font-weight:800; font-size:18px; }
+.advisor-dot { width:10px; height:10px; border-radius:99px; background:#34D399; box-shadow:0 0 0 4px rgba(52,211,153,.12); }
+.advisor-side { display:grid; gap:14px; }
+.advisor-side-card { background:#0F1B2D; border:1px solid #2C3D55; border-radius:14px; padding:20px; }
+.advisor-side-card h3 { color:#F8FAFC; font-size:17px; margin:0 0 10px; }
+.advisor-side-card p, .advisor-side-card li { color:#A8B3C7; font-size:16px; line-height:1.6; }
+.advisor-side-card ul { margin:0; padding-left:19px; }
+.advisor-composer { padding:14px; background:#0F1B2D; border:1px solid #2C3D55; border-radius:14px; margin-top:14px; }
+.advisor-composer textarea, .advisor-composer input { font-size:18px !important; }
+.advisor-reset button { min-height:auto !important; background:transparent !important; border:0 !important; color:#94A3B8 !important; padding:5px 0 !important; font-size:14px !important; box-shadow:none !important; }
+@media (max-width: 800px) { .advisor-shell { padding:18px 12px 28px; } .advisor-hero h1 { font-size:28px; } .advisor-hero p { font-size:16px; } }
 
 /* â”€â”€ Status Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .status-bar {
@@ -594,7 +619,7 @@ footer { display: none !important; }
 # GRADIO UI
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-def build_ui():
+def build_legacy_ui():
     with gr.Blocks(
         css=CUSTOM_CSS,
         title="Vehicle Maintenance AI Platform",
@@ -945,6 +970,92 @@ def build_ui():
 
 
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+def build_ui():
+    """Chat-first UI. The agent collects only the details it needs."""
+    with gr.Blocks(
+        css=CUSTOM_CSS,
+        title="AI Vehicle Service Advisor",
+        theme=gr.themes.Base(primary_hue="cyan", secondary_hue="purple", neutral_hue="slate"),
+    ) as demo:
+        gr.HTML("""
+        <div class="advisor-shell advisor-hero">
+          <div class="advisor-kicker">Vehicle care, explained clearly</div>
+          <h1>Your personal service advisor</h1>
+          <p>Tell me what your vehicle is doing. I’ll help you understand what may be happening and what to do next.</p>
+        </div>
+        """)
+        with gr.Column(elem_classes="advisor-shell"):
+            status_box = gr.HTML('<div class="status-bar">Preparing your advisor…</div>')
+            memory = gr.State(value=None)
+            with gr.Row(equal_height=False):
+                with gr.Column(scale=8, min_width=480):
+                    with gr.Column(elem_classes="advisor-chat-panel"):
+                        gr.HTML('<div class="advisor-chat-head"><span class="advisor-dot"></span>Service Advisor</div>')
+                        chatbot = gr.Chatbot(
+                            value=[{"role": "assistant", "content": "Hi — what have you noticed with your vehicle today? I’ll help you make sense of it."}],
+                            height=570, show_label=False, layout="bubble", elem_classes="chatbot-container",
+                        )
+                    with gr.Column(elem_classes="advisor-composer"):
+                        with gr.Row():
+                            message = gr.Textbox(show_label=False, lines=1, scale=6,
+                                placeholder="Describe the sound, warning, performance issue, or anything else you notice…")
+                            send = gr.Button("Send", elem_classes="btn-primary", scale=1)
+                        reset = gr.Button("Start a new conversation", elem_classes="advisor-reset")
+                with gr.Column(scale=4, min_width=280, elem_classes="advisor-side"):
+                    assessment_card = gr.HTML('<div class="advisor-side-card"><h3>Current assessment</h3><p>Your latest service guidance will appear here.</p></div>')
+                    gr.HTML("""
+                    <div class="advisor-side-card">
+                      <h3>How I can help</h3>
+                      <ul>
+                        <li>Explain unusual sounds and warning signs</li>
+                        <li>Suggest sensible next checks</li>
+                        <li>Help you decide how urgently to visit a service centre</li>
+                      </ul>
+                    </div>
+                    """)
+
+        def render_assessment_card(session_memory):
+            result = (session_memory or {}).get("last_result")
+            if not result:
+                return '<div class="advisor-side-card"><h3>Current assessment</h3><p>Your latest service guidance will appear here.</p></div>'
+            risk = html.escape(str(result.get("risk_level", "Unknown")).title())
+            confidence = float(result.get("confidence", 0))
+            colour = "#FF3D71" if risk in {"High", "Critical"} else "#FACC15" if risk == "Moderate" else "#00E676"
+            return f'<div class="advisor-side-card" style="border-left:4px solid {colour};"><h3 style="color:{colour};">{risk} attention level</h3><p style="margin:0;">The model has {confidence:.0f}% confidence in the current assessment. Keep sharing what you notice and I’ll refine the advice.</p></div>'
+
+        def respond(user_message, history, session_memory):
+            text = (user_message or "").strip()
+            if not text:
+                return history, "", session_memory, render_assessment_card(session_memory)
+            history = list(history or [])
+            reply, session_memory = handle_message(text, session_memory)
+            history.extend([{"role": "user", "content": text}, {"role": "assistant", "content": reply}])
+            return history, "", session_memory, render_assessment_card(session_memory)
+
+        def reset_session():
+            return ([{"role": "assistant", "content": "New assessment started. What is happening with your vehicle?"}], None, "", render_assessment_card(None))
+
+        send.click(respond, [message, chatbot, memory], [chatbot, message, memory, assessment_card], show_progress="full")
+        message.submit(respond, [message, chatbot, memory], [chatbot, message, memory, assessment_card], show_progress="full")
+        reset.click(reset_session, outputs=[chatbot, memory, message, assessment_card])
+
+        def on_load():
+            ok, msg = initialise_system()
+            if ok:
+                return '<div class="status-bar">● Advisor ready to help</div>'
+            return f'<div class="status-bar" style="border-color:rgba(255,61,113,.4);color:#FF3D71;">❌ {msg}</div>'
+
+        demo.load(on_load, outputs=status_box)
+    from fastapi.responses import JSONResponse
+
+    def health_gemini():
+        report = gemini_health_check()
+        return JSONResponse(content=report, status_code=200 if report.get("ok") else 503)
+
+    demo.app.add_api_route("/health/gemini", health_gemini, methods=["GET"], include_in_schema=False)
+    return demo
+
 
 if __name__ == "__main__":
     print("=" * 60)

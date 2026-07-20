@@ -1,0 +1,129 @@
+2026-07-11 17:25:09,682 INFO vehicle_advisor.openai: OpenAI config loaded: dotenv_loaded=True sdk_version=2.28.0 model=gpt-4o-mini
+2026-07-11 17:25:14,687 INFO vehicle_advisor.openai: OpenAI config loaded: dotenv_loaded=True sdk_version=2.28.0 model=gpt-4o-mini
+2026-07-11 17:25:14,688 INFO vehicle_advisor.openai: OpenAI API key check: present=True length=164 prefix=sk-proj
+2026-07-11 17:25:14,688 INFO vehicle_advisor.openai: OpenAI health check request: model=gpt-4o-mini payload={"message":"Reply with OK"}
+2026-07-11 17:25:14,688 INFO vehicle_advisor.openai: Initializing OpenAI client: model=gpt-4o-mini key_prefix=sk-proj
+2026-07-11 17:25:18,431 ERROR vehicle_advisor.openai: OPENAI ERROR during health check: OpenAI error 429 Quota or rate limit exceeded: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+Traceback (most recent call last):
+  File "D:\Users\vehicle_maintenance_platform\services\advisor_service.py", line 75, in openai_health_check
+    response = _client().chat.completions.create(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\_utils\_utils.py", line 286, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\resources\chat\completions\completions.py", line 1211, in create
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\_base_client.py", line 1297, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\_base_client.py", line 1070, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.RateLimitError: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2026-07-11 17:25:20,198 INFO vehicle_advisor.openai: OpenAI config loaded: dotenv_loaded=True sdk_version=2.28.0 model=gpt-4o-mini
+2026-07-11 17:25:22,613 INFO vehicle_advisor.openai: OpenAI API key check: present=True length=164 prefix=sk-proj
+2026-07-11 17:25:22,614 INFO vehicle_advisor.openai: OpenAI request payload: {"operation": "plan_turn", "model": "gpt-4o-mini", "message": "hi", "known_facts": {}}
+2026-07-11 17:25:22,614 INFO vehicle_advisor.openai: Initializing OpenAI client: model=gpt-4o-mini key_prefix=sk-proj
+2026-07-11 17:25:26,753 ERROR vehicle_advisor.openai: OPENAI ERROR during plan_turn: OpenAI error 429 Quota or rate limit exceeded: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+Traceback (most recent call last):
+  File "D:\Users\vehicle_maintenance_platform\services\advisor_service.py", line 108, in plan_turn
+    completion = _client().beta.chat.completions.parse(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\resources\chat\completions\completions.py", line 191, in parse
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\_base_client.py", line 1297, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\_base_client.py", line 1070, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.RateLimitError: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2026-07-11 17:25:26,764 ERROR vehicle_advisor.openai: OPENAI ERROR in advisor request flow: OpenAI error 429 Quota or rate limit exceeded: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+Traceback (most recent call last):
+  File "D:\Users\vehicle_maintenance_platform\agents\vehicle_agent.py", line 31, in handle_message
+    plan = plan_turn(message, memory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Users\vehicle_maintenance_platform\services\advisor_service.py", line 108, in plan_turn
+    completion = _client().beta.chat.completions.parse(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\resources\chat\completions\completions.py", line 191, in parse
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\_base_client.py", line 1297, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\_base_client.py", line 1070, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.RateLimitError: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2026-07-11 17:27:25,377 INFO vehicle_advisor.openai: OpenAI config loaded: dotenv_loaded=True sdk_version=2.28.0 model=gpt-4o-mini
+2026-07-11 17:28:43,353 INFO vehicle_advisor.openai: OpenAI API key check: present=True length=164 prefix=sk-proj
+2026-07-11 17:28:43,354 INFO vehicle_advisor.openai: OpenAI request payload: {"operation": "plan_turn", "model": "gpt-4o-mini", "message": "dude ,my car ismaking some noise", "known_facts": {}}
+2026-07-11 17:28:43,355 INFO vehicle_advisor.openai: Initializing OpenAI client: model=gpt-4o-mini key_prefix=sk-proj
+2026-07-11 17:28:47,211 ERROR vehicle_advisor.openai: OPENAI ERROR during plan_turn: OpenAI error 429 Quota or rate limit exceeded: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+Traceback (most recent call last):
+  File "D:\Users\vehicle_maintenance_platform\services\advisor_service.py", line 108, in plan_turn
+    completion = _client().beta.chat.completions.parse(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\resources\chat\completions\completions.py", line 191, in parse
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\_base_client.py", line 1297, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\_base_client.py", line 1070, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.RateLimitError: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2026-07-11 17:28:47,229 ERROR vehicle_advisor.openai: OPENAI ERROR in advisor request flow: OpenAI error 429 Quota or rate limit exceeded: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+Traceback (most recent call last):
+  File "D:\Users\vehicle_maintenance_platform\agents\vehicle_agent.py", line 31, in handle_message
+    plan = plan_turn(message, memory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Users\vehicle_maintenance_platform\services\advisor_service.py", line 108, in plan_turn
+    completion = _client().beta.chat.completions.parse(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\resources\chat\completions\completions.py", line 191, in parse
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\_base_client.py", line 1297, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\_base_client.py", line 1070, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.RateLimitError: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2026-07-11 17:30:22,484 INFO vehicle_advisor.openai: OpenAI config loaded: dotenv_loaded=True sdk_version=2.28.0 model=gpt-4o-mini
+2026-07-11 17:31:21,838 INFO vehicle_advisor.openai: OpenAI config loaded: dotenv_loaded=True sdk_version=2.28.0 model=gpt-4o-mini
+2026-07-11 17:32:08,577 INFO vehicle_advisor.openai: OpenAI config loaded: dotenv_loaded=True sdk_version=2.28.0 model=gpt-4o-mini
+2026-07-11 17:32:14,522 INFO vehicle_advisor.openai: OpenAI API key check: present=True length=164 prefix=sk-proj
+2026-07-11 17:32:14,523 INFO vehicle_advisor.openai: OpenAI request payload: {"operation": "plan_turn", "model": "gpt-4o-mini", "message": "hi", "known_facts": {}}
+2026-07-11 17:32:14,525 INFO vehicle_advisor.openai: Initializing OpenAI client: model=gpt-4o-mini key_prefix=sk-proj
+2026-07-11 17:32:18,867 ERROR vehicle_advisor.openai: OPENAI ERROR during plan_turn: OpenAI error 429 Quota or rate limit exceeded: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+Traceback (most recent call last):
+  File "D:\Users\vehicle_maintenance_platform\services\advisor_service.py", line 108, in plan_turn
+    completion = _client().beta.chat.completions.parse(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\resources\chat\completions\completions.py", line 191, in parse
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\_base_client.py", line 1297, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\_base_client.py", line 1070, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.RateLimitError: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2026-07-11 17:32:18,882 ERROR vehicle_advisor.openai: OPENAI ERROR in advisor request flow: OpenAI error 429 Quota or rate limit exceeded: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+Traceback (most recent call last):
+  File "D:\Users\vehicle_maintenance_platform\agents\vehicle_agent.py", line 31, in handle_message
+    plan = plan_turn(message, memory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Users\vehicle_maintenance_platform\services\advisor_service.py", line 108, in plan_turn
+    completion = _client().beta.chat.completions.parse(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\resources\chat\completions\completions.py", line 191, in parse
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\_base_client.py", line 1297, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hegde\AppData\Local\Programs\Python\Python311\Lib\site-packages\openai\_base_client.py", line 1070, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.RateLimitError: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
