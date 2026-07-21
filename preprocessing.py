@@ -1,6 +1,12 @@
 """
 preprocessing.py
-Robust data preprocessing pipeline for Vehicle Maintenance Prediction.
+Simplified 10-feature preprocessing pipeline for Vehicle Maintenance Prediction.
+
+Features:
+  Categorical: Vehicle_Model, Tire_Condition, Brake_Condition
+  Numeric:     Vehicle_Age, Odometer_Reading, Number_of_Services,
+               days_since_last_service, Accident_History, Mileage,
+               Average_KM_Per_Day
 """
 
 import pandas as pd
@@ -16,15 +22,13 @@ MODEL_DIR = os.path.join(os.path.dirname(__file__), "models")
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 CATEGORICAL_COLS = [
-    "Vehicle_Model", "Fuel_Type", "Transmission_Type", "Owner_Type",
-    "Maintenance_History", "Service_History", "Tire_Condition",
-    "Brake_Condition", "Battery_Status"
+    "Vehicle_Model", "Tire_Condition", "Brake_Condition",
 ]
 
 NUMERICAL_COLS = [
-    "Mileage", "Reported_Issues", "Vehicle_Age", "Engine_Size",
-    "Odometer_Reading", "Insurance_Premium", "Fuel_Efficiency",
-    "days_since_last_service", "warranty_remaining_days"
+    "Vehicle_Age", "Odometer_Reading", "Number_of_Services",
+    "days_since_last_service", "Accident_History", "Mileage",
+    "Average_KM_Per_Day",
 ]
 
 TARGET = "Need_Maintenance"
@@ -39,6 +43,31 @@ def parse_date_safe(date_series, reference_date=None):
     return delta.fillna(delta.median())
 
 
+def _derive_features(df: pd.DataFrame, ref_date: datetime) -> pd.DataFrame:
+    """Derive Number_of_Services, days_since_last_service, Average_KM_Per_Day."""
+    # days_since_last_service from Last_Service_Date
+    if "Last_Service_Date" in df.columns:
+        df["days_since_last_service"] = parse_date_safe(df["Last_Service_Date"], ref_date)
+    elif "days_since_last_service" not in df.columns:
+        df["days_since_last_service"] = 180  # ~6 months default
+
+    # Number_of_Services from Service_History (already numeric 1-10 in CSV)
+    if "Number_of_Services" not in df.columns:
+        if "Service_History" in df.columns:
+            df["Number_of_Services"] = pd.to_numeric(df["Service_History"], errors="coerce").fillna(5)
+        else:
+            df["Number_of_Services"] = 5
+
+    # Average_KM_Per_Day from Odometer / (Vehicle_Age * 365)
+    if "Average_KM_Per_Day" not in df.columns:
+        odometer = pd.to_numeric(df.get("Odometer_Reading", pd.Series([60000])), errors="coerce").fillna(60000)
+        age_years = pd.to_numeric(df.get("Vehicle_Age", pd.Series([5])), errors="coerce").fillna(5)
+        age_days = (age_years * 365).clip(lower=1)
+        df["Average_KM_Per_Day"] = (odometer / age_days).round(1)
+
+    return df
+
+
 def preprocess_data(df: pd.DataFrame, fit: bool = True,
                     encoders: dict = None, scaler: StandardScaler = None):
     """
@@ -47,18 +76,21 @@ def preprocess_data(df: pd.DataFrame, fit: bool = True,
     Returns: X (DataFrame), y (Series), encoders, scaler
     """
     df = df.copy()
-
-    # --- Date Features ---
     ref_date = datetime(2024, 6, 1)
-    df["days_since_last_service"] = parse_date_safe(df.get("Last_Service_Date", pd.Series()), ref_date)
-    df["warranty_remaining_days"] = (
-        pd.to_datetime(df.get("Warranty_Expiry_Date", pd.Series()), errors="coerce") - ref_date
-    ).dt.days.fillna(0).clip(lower=0)
 
-    # --- Drop raw date columns ---
-    df.drop(columns=["Last_Service_Date", "Warranty_Expiry_Date"], errors="ignore", inplace=True)
+    # ── Derive features ──────────────────────────────────────────────────────
+    df = _derive_features(df, ref_date)
 
-    # --- Fill missing values ---
+    # ── Drop raw date / unused columns ───────────────────────────────────────
+    drop_cols = [
+        "Last_Service_Date", "Warranty_Expiry_Date", "Service_History",
+        "Fuel_Type", "Transmission_Type", "Owner_Type", "Engine_Size",
+        "Insurance_Premium", "Fuel_Efficiency", "Battery_Status",
+        "Maintenance_History", "Reported_Issues",
+    ]
+    df.drop(columns=[c for c in drop_cols if c in df.columns], errors="ignore", inplace=True)
+
+    # ── Fill missing values ──────────────────────────────────────────────────
     for col in CATEGORICAL_COLS:
         if col in df.columns:
             df[col] = df[col].fillna(df[col].mode()[0] if not df[col].mode().empty else "Unknown")
@@ -68,7 +100,7 @@ def preprocess_data(df: pd.DataFrame, fit: bool = True,
             df[col] = pd.to_numeric(df[col], errors="coerce")
             df[col] = df[col].fillna(df[col].median() if df[col].notna().any() else 0)
 
-    # --- Encode categoricals ---
+    # ── Encode categoricals ──────────────────────────────────────────────────
     if fit:
         encoders = {}
         for col in CATEGORICAL_COLS:
@@ -85,19 +117,20 @@ def preprocess_data(df: pd.DataFrame, fit: bool = True,
                     lambda x: le.transform([x])[0] if x in le.classes_ else 0
                 )
 
-    # --- Feature Matrix ---
+    # ── Feature Matrix ───────────────────────────────────────────────────────
     feature_cols = [c for c in CATEGORICAL_COLS + NUMERICAL_COLS if c in df.columns]
     X = df[feature_cols].copy()
 
-    # --- Scale ---
+    # ── Scale numerics ───────────────────────────────────────────────────────
     if fit:
         scaler = StandardScaler()
-        X[NUMERICAL_COLS] = scaler.fit_transform(X[[c for c in NUMERICAL_COLS if c in X.columns]])
+        num_present = [c for c in NUMERICAL_COLS if c in X.columns]
+        X[num_present] = scaler.fit_transform(X[num_present])
         joblib.dump(scaler, os.path.join(MODEL_DIR, "scaler.pkl"))
     else:
         if scaler:
-            num_cols_present = [c for c in NUMERICAL_COLS if c in X.columns]
-            X[num_cols_present] = scaler.transform(X[num_cols_present])
+            num_present = [c for c in NUMERICAL_COLS if c in X.columns]
+            X[num_present] = scaler.transform(X[num_present])
 
     y = df[TARGET].astype(int) if TARGET in df.columns else None
 
@@ -113,6 +146,7 @@ def load_and_preprocess(csv_path: str):
         X, y, test_size=0.2, random_state=42, stratify=y
     )
     print(f"[Preprocessing] Train: {len(X_train)}, Test: {len(X_test)}")
+    print(f"[Preprocessing] Features ({len(X.columns)}): {X.columns.tolist()}")
     return X_train, X_test, y_train, y_test, encoders, scaler, X.columns.tolist()
 
 

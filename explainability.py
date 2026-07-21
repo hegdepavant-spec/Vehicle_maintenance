@@ -53,7 +53,7 @@ def get_shap_explainer(model, X_background=None, force_rebuild=False):
 def compute_shap_values_single(explainer, X_row):
     """Compute SHAP values for a single row."""
     try:
-        shap_vals = explainer.shap_values(X_row)
+        shap_vals = explainer.shap_values(X_row, check_additivity=False)
         # Older SHAP: list[class] -> (rows, features)
         if isinstance(shap_vals, list):
             shap_vals = shap_vals[1]  # class 1 = maintenance needed

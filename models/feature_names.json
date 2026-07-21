@@ -1,1 +1,1 @@
-["Vehicle_Model", "Fuel_Type", "Transmission_Type", "Owner_Type", "Maintenance_History", "Service_History", "Tire_Condition", "Brake_Condition", "Battery_Status", "Mileage", "Reported_Issues", "Vehicle_Age", "Engine_Size", "Odometer_Reading", "Insurance_Premium", "Fuel_Efficiency", "days_since_last_service", "warranty_remaining_days"]
+["Vehicle_Model", "Tire_Condition", "Brake_Condition", "Vehicle_Age", "Odometer_Reading", "Number_of_Services", "days_since_last_service", "Accident_History", "Mileage", "Average_KM_Per_Day"]

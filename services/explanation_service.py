@@ -11,7 +11,7 @@ def build_assessment_response(row: dict, result: dict, known_fields: set[str], f
         "Based on what you've described, here is my initial assessment.",
         "",
         f"**Maintenance risk: {risk}**",
-        f"{maintenance}. I have **{result['advisory_confidence']:.0f}% confidence** in this initial view.",
+        f"{maintenance}. I have **{result['confidence']:.0f}% confidence** in this initial view.",
         "",
         "**What stands out**",
     ]
@@ -27,10 +27,14 @@ def _customer_factors(row: dict, result: dict) -> list[str]:
     factors = []
     if int(row.get("Odometer_Reading", 0)) >= 100_000:
         factors.append("The vehicle's mileage suggests it is due for closer routine inspection.")
-    for field, label in (("Battery_Status", "battery"), ("Brake_Condition", "brakes"), ("Tire_Condition", "tires")):
+    for field, label in (("Brake_Condition", "brakes"), ("Tire_Condition", "tires")):
         value = str(row.get(field, "")).lower()
-        if value in {"weak", "dead", "critical", "worn", "worn out", "moderate"}:
+        if value in {"weak", "critical", "worn", "worn out", "moderate"}:
             factors.append(f"The reported {label} condition needs attention.")
-    if int(row.get("Reported_Issues", 0)):
-        factors.append("The symptoms you mentioned also increase the chance that service is needed soon.")
+    try:
+        avg_km = float(row.get("Average_KM_Per_Day", 0))
+    except (TypeError, ValueError):
+        avg_km = 0
+    if avg_km >= 80:
+        factors.append("High daily driving distance increases overall wear rate.")
     return factors or ["The current information does not point to a specific urgent component concern."]

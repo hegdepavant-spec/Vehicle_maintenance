@@ -1,4 +1,4 @@
-﻿"""
+"""
 app.py
 Vehicle Maintenance Prediction & Explainable Diagnostics Platform
 Main Gradio Dashboard â€” Production-Grade UI
@@ -6,6 +6,7 @@ Main Gradio Dashboard â€” Production-Grade UI
 
 import os
 import sys
+import socket
 import json
 import time
 import html
@@ -18,8 +19,9 @@ from dotenv import load_dotenv
 warnings.filterwarnings("ignore")
 load_dotenv()
 
-# â”€â”€ Project Imports â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Project Imports ───────────────────────────────────────────────────────────
 sys.path.insert(0, os.path.dirname(__file__))
+
 
 from preprocessing    import load_and_preprocess, preprocess_single_row
 from train_model      import train_and_save
@@ -1048,13 +1050,31 @@ def build_ui():
 
         demo.load(on_load, outputs=status_box)
     from fastapi.responses import JSONResponse
+    from services.advisor_service import llm_health_check
 
-    def health_gemini():
-        report = gemini_health_check()
+    def health_llm():
+        report = llm_health_check()
         return JSONResponse(content=report, status_code=200 if report.get("ok") else 503)
 
-    demo.app.add_api_route("/health/gemini", health_gemini, methods=["GET"], include_in_schema=False)
+    demo.app.add_api_route("/health/llm", health_llm, methods=["GET"], include_in_schema=False)
+    demo.app.add_api_route("/health/gemini", health_llm, methods=["GET"], include_in_schema=False)
     return demo
+
+
+
+def find_available_port(start_port: int = 7860, max_attempts: int = 100, host: str = "0.0.0.0") -> int:
+    """Find an available TCP port starting from `start_port`.
+
+    Gracefully tests socket binding to prevent OSError 10048 / port conflict on Windows.
+    """
+    for port in range(start_port, start_port + max_attempts):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind((host, port))
+                return port
+            except OSError:
+                continue
+    return start_port
 
 
 if __name__ == "__main__":
@@ -1067,10 +1087,18 @@ if __name__ == "__main__":
     print(f"[Startup] {msg}")
 
     demo = build_ui()
+
+    requested_port = int(os.getenv("GRADIO_SERVER_PORT", os.getenv("PORT", 7860)))
+    server_port = find_available_port(start_port=requested_port, max_attempts=100, host="0.0.0.0")
+
+    if server_port != requested_port:
+        print(f"[Port Recovery] Port {requested_port} is occupied. Automatically bound to open port {server_port}.")
+
     demo.launch(
         server_name="0.0.0.0",
-        server_port=7860,
+        server_port=server_port,
         share=False,
         show_error=True,
         quiet=False,
     )
+

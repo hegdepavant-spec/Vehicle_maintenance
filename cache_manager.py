@@ -57,12 +57,21 @@ def load_all_models():
             with open(metrics_path) as f:
                 _cache["metrics"] = json.load(f)
 
-        # Load feature names
+        # Load feature names and validate count matches the current pipeline
+        EXPECTED_FEATURE_COUNT = 10
         feat_path = os.path.join(MODEL_DIR, "feature_names.json")
         if os.path.exists(feat_path):
             import json
             with open(feat_path) as f:
                 _cache["feature_names"] = json.load(f)
+            # If the saved model was trained on a different feature set, force retrain
+            if len(_cache["feature_names"]) != EXPECTED_FEATURE_COUNT:
+                print(f"[Cache] Feature count mismatch: saved={len(_cache['feature_names'])}, "
+                      f"expected={EXPECTED_FEATURE_COUNT}. Forcing retrain.")
+                return False
+        else:
+            print("[Cache] feature_names.json not found. Forcing retrain.")
+            return False
 
         # Load SHAP explainer if cached
         shap_path = os.path.join(MODEL_DIR, "shap_explainer.pkl")
